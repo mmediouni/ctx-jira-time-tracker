@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <section id="current">
+    <div class="label" id="curLabel">Ticket détecté</div>
+    <div class="key" id="key">—</div>
+    <div class="title" id="title">Aucun ticket Jira détecté sur cet onglet</div>
+    <div class="timer" id="timer" hidden>00:00:00</div>
+    <div class="row">
+      <button id="start" class="primary">▶ Démarrer</button>
+      <button id="stop" class="danger" hidden>■ Arrêter</button>
+    </div>
+  </section>
+
+  <section id="notesBox" hidden>
+    <textarea id="noteInput" rows="2" placeholder="Ajouter une note…"></textarea>
+    <button id="addNote">Ajouter la note</button>
+    <ul id="notes"></ul>
+  </section>
+
+  <section>
+    <div class="head">
+      <h3>Historique</h3>
+      <button id="export" class="link">Export CSV</button>
+      <button id="clear" class="link">Vider</button>
+    </div>
+    <div id="history"></div>
+  </section>
+  <script src="popup.js"></script>
+</body>
+</html>
