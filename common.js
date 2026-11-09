@@ -17,7 +17,7 @@ function downloadCsv(history) {
   const q = (s) => `"${String(s).replace(/"/g, '""')}"`;
   const head = "ticket,titre,date,debut,debut_heure,fin,fin_heure,duree,notes";
   const rows = history.map((e) => [
-    e.key || "HORS-JIRA", e.title, ymd(e.start),
+    e.key || (e.pause ? "PAUSE" : "HORS-JIRA"), e.title, ymd(e.start),
     new Date(e.start).toISOString(), hhmm(e.start),
     new Date(e.end).toISOString(), hhmm(e.end),
     fmt(e.end - e.start),
@@ -25,4 +25,9 @@ function downloadCsv(history) {
   ].map(q).join(","));
   const url = URL.createObjectURL(new Blob(["﻿" + [head, ...rows].join("\n")], { type: "text/csv" }));
   Object.assign(document.createElement("a"), { href: url, download: "jira-time.csv" }).click();
+}
+
+function downloadJson(data) {
+  const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: "application/json" }));
+  Object.assign(document.createElement("a"), { href: url, download: `jira-time-backup-${ymd(Date.now())}.json` }).click();
 }

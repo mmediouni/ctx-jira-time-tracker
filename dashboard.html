@@ -41,16 +41,22 @@
     <div id="entries"></div>
   </section>
   <section>
-    <h2>Ajouter un travail hors Jira</h2>
+    <h2>Ajouter une session manuellement</h2>
+    <small>Hors Jira, ou ancien ticket oublié (choisis la date).</small>
     <form id="manual">
       <input id="mTitle" placeholder="Description (ex: Réunion, support…)" required>
-      <input id="mKey" placeholder="Ticket (optionnel)">
+      <input id="mKey" list="keys" placeholder="Ticket (ex: RHCP-21, optionnel)">
+      <datalist id="keys"></datalist>
+      <label>Date <input type="date" id="mDate" required></label>
       <div class="two">
         <label>Début <input type="time" id="mStart" required></label>
         <label>Fin <input type="time" id="mEnd" required></label>
       </div>
       <textarea id="mNote" rows="2" placeholder="Note (optionnel)"></textarea>
-      <button class="primary">Ajouter</button>
+      <div class="two">
+        <button class="primary">Ajouter</button>
+        <button type="button" id="pauseBtn">🍽 Pause déj (1 h)</button>
+      </div>
       <div id="mErr" class="err"></div>
     </form>
   </section>
@@ -64,6 +70,28 @@
     <div><h3>Top tickets de la semaine</h3><div id="top"></div></div>
   </div>
 </section>
+
+<dialog id="editor">
+  <form id="eForm">
+    <h2>Modifier la session</h2>
+    <input id="eKey" placeholder="Ticket (optionnel)">
+    <input id="eTitle" placeholder="Titre" required>
+    <label>Date <input type="date" id="eDate" required></label>
+    <div class="two">
+      <label>Début <input type="time" id="eStart" required></label>
+      <label>Fin <input type="time" id="eEnd" required></label>
+    </div>
+    <h3>Notes</h3>
+    <div id="eNotes"></div>
+    <button type="button" id="eAddNote">+ Note</button>
+    <div id="eErr" class="err"></div>
+    <div class="two">
+      <button class="primary">Enregistrer</button>
+      <button type="button" id="eCancel">Annuler</button>
+      <button type="button" id="eDelete" class="dangerlink">Supprimer</button>
+    </div>
+  </form>
+</dialog>
 
 <script src="common.js"></script>
 <script src="dashboard.js"></script>

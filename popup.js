@@ -25,7 +25,8 @@ async function detect() {
 }
 
 async function load() {
-  const d = await chrome.storage.local.get(["running", "history"]);
+  const d = await chrome.storage.local.get(["running", "history", "historyBackup"]);
+  $("restore").hidden = !(d.historyBackup && d.historyBackup.length);
   running = d.running || null;
   render(d.history || []);
 }
@@ -77,7 +78,25 @@ $("addNote").onclick = async () => {
   await save({ running }); load();
 };
 $("clear").onclick = async () => {
-  if (confirm("Supprimer tout l'historique ?")) { await save({ history: [] }); load(); }
+  const { history = [] } = await chrome.storage.local.get("history");
+  if (!history.length) return alert("L'historique est déjà vide.");
+  const ok = prompt(
+    `Tu vas supprimer ${history.length} session(s).\n` +
+    "Une sauvegarde (.json) sera téléchargée et gardée dans l'extension.\n\n" +
+    "Tape VIDER pour confirmer :");
+  if (ok !== "VIDER") return;
+  downloadJson(history);                       // 1) sauvegarde sur le disque
+  await save({ historyBackup: history });      // 2) copie de secours dans l'extension
+  await save({ history: [] }); load();
+};
+$("restore").onclick = async () => {
+  const { historyBackup = [], history = [] } = await chrome.storage.local.get(["historyBackup", "history"]);
+  if (!confirm(`Restaurer ${historyBackup.length} session(s) sauvegardée(s) ?`)) return;
+  const ids = new Set(history.map((e) => e.start + "|" + e.end));
+  const merged = [...history, ...historyBackup.filter((e) => !ids.has(e.start + "|" + e.end))]
+    .sort((a, b) => a.start - b.start);
+  await save({ history: merged });
+  await chrome.storage.local.remove("historyBackup"); load();
 };
 $("export").onclick = async () => {
   const { history = [] } = await chrome.storage.local.get("history");

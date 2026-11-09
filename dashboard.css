@@ -43,3 +43,20 @@ form{display:flex;flex-direction:column;gap:8px}
 .bar .tg{border-top:1px dashed #d93025;width:100%}
 .hbar{margin:4px 0;font-size:12px}
 .hbar div{background:#4c9aff;height:8px;border-radius:3px;margin-top:2px}
+
+.entry .edit{border:0;background:none;color:#0052cc;padding:0 4px;float:right}
+dialog{border:1px solid #dfe1e6;border-radius:8px;width:420px;padding:16px}
+dialog::backdrop{background:rgba(0,0,0,.35)}
+.nrow{display:flex;gap:6px;margin-bottom:6px}
+.nrow .nt{flex:1}
+.dangerlink{margin-left:auto;color:#d93025}
+label{display:flex;flex-direction:column;gap:2px;font-size:12px;color:#6b778c}
+
+.blk.pause{background:#ff991f}
+.entry.pause b{color:#ff8b00}
+.entry.pause{background:#fff7e6}
+#pauseBtn{background:#ff991f;border-color:#ff991f;color:#fff}
+#pauseBtn.on{outline:2px solid #172b4d}
+form.pausing{border-left:3px solid #ff991f;padding-left:8px}
+#gaps li.gap{cursor:pointer;text-decoration:underline dotted}
+#gaps li.gap:hover{font-weight:600}
