@@ -1,4 +1,4 @@
-let history = [], running = null;
+let history = [], running = null, statusChanges = [];
 let settings = { target: 7.5, from: "08:00", to: "18:00" };
 let day = ymd(Date.now());
 const H = 3600000, MIN = 60000;
@@ -15,7 +15,8 @@ const all = () => running ? [...history, { ...running, end: Date.now(), running:
 const ofDay = (d) => all().filter((e) => ymd(e.start) === d).sort((a, b) => a.start - b.start);
 
 async function load() {
-  const d = await chrome.storage.local.get(["history", "running", "settings"]);
+  const d = await chrome.storage.local.get(["history", "running", "settings", "statusChanges"]);
+  statusChanges = d.statusChanges || [];
   history = d.history || []; running = d.running || null;
   settings = { ...settings, ...(d.settings || {}) };
   // identifiant stable pour pouvoir éditer / supprimer
@@ -36,6 +37,7 @@ function render() {
   $("cMissCard").className = "card " + (miss > 0 ? "bad" : "good");
   $("cMissLabel").textContent = miss > 0 ? "Manquant" : "Dépassement";
   $("cMiss").textContent = fmtHM(Math.abs(miss));
+  renderStatuses();
   renderTimeline(es);
   renderEntries(es);
   renderStats();
@@ -121,9 +123,10 @@ $("day").onchange = (e) => { if (e.target.value) { day = e.target.value; render(
 $("prev").onclick = () => { day = addDays(day, -1); render(); };
 $("next").onclick = () => { day = addDays(day, 1); render(); };
 $("today").onclick = () => { day = ymd(Date.now()); render(); };
+$("config").onclick = () => chrome.runtime.openOptionsPage();
 $("export").onclick = () => downloadCsv(history);
 ["target", "from", "to"].forEach((id) => $(id).onchange = () => {
-  settings = { target: parseFloat($("target").value) || 0, from: $("from").value || "08:00", to: $("to").value || "18:00" };
+  settings = { ...settings, target: parseFloat($("target").value) || 0, from: $("from").value || "08:00", to: $("to").value || "18:00" };
   chrome.storage.local.set({ settings }); render();
 });
 document.addEventListener("click", (ev) => {
@@ -244,3 +247,14 @@ $("eForm").onsubmit = (ev) => {
 chrome.storage.onChanged.addListener(load);
 setInterval(() => running && render(), 30000);
 load();
+
+function renderStatuses() {
+  const me = (settings.me || "").toLowerCase();
+  const list = statusChanges.filter((s) => ymd(s.at) === day && (!me || s.by.toLowerCase() === me));
+  $("statuses").innerHTML = list.map((s) => `
+    <div class="entry"><span class="dur">${hhmm(s.at)}</span>
+      <b>${esc(s.key)}</b> ${esc(s.title || "")}
+      <div class="t">${esc(s.from || "?")} → <b>${esc(s.to)}</b>${me ? "" : " · " + esc(s.by)}</div>
+    </div>`).join("") ||
+    `<small>Aucun changement de statut ce jour${me ? "" : ". Renseigne ton nom dans ⚙ Configuration pour filtrer"}. Dans le popup, clique « Synchroniser les statuts » sur un ticket.</small>`;
+}

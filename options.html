@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <title>Jira Time Tracker – Configuration</title>
+  <link rel="stylesheet" href="dashboard.css">
+</head>
+<body>
+  <h1>Configuration</h1>
+  <section>
+    <h2>Utilisateur</h2>
+    <form id="f">
+      <label>Ton nom tel qu'affiché dans Jira
+        <input id="me" placeholder="ex: Mohamed Mediouni" required>
+      </label>
+      <small>Sert à ne garder que tes changements de statut (onglet History). Copie le nom exactement comme dans Jira.</small>
+      <button class="primary">Enregistrer</button>
+      <div id="msg"></div>
+    </form>
+  </section>
+  <script src="options.js"></script>
+</body>
+</html>

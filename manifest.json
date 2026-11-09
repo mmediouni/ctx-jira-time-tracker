@@ -3,7 +3,20 @@
   "name": "Jira Time Tracker",
   "version": "1.0.0",
   "description": "Chronomètre manuel pour tes tickets Jira, avec notes et historique.",
-  "permissions": ["storage", "activeTab", "scripting"],
-  "action": { "default_popup": "popup.html", "default_title": "Jira Time Tracker" },
-  "background": { "service_worker": "background.js" }
+  "permissions": [
+    "storage",
+    "activeTab",
+    "scripting"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Jira Time Tracker"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": true
+  }
 }

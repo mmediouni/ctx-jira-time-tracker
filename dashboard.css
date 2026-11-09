@@ -60,3 +60,4 @@ label{display:flex;flex-direction:column;gap:2px;font-size:12px;color:#6b778c}
 form.pausing{border-left:3px solid #ff991f;padding-left:8px}
 #gaps li.gap{cursor:pointer;text-decoration:underline dotted}
 #gaps li.gap:hover{font-weight:600}
+.me{flex-direction:row;align-items:center;gap:6px}.me input{width:130px}
