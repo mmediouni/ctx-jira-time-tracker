@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <title>Jira Time Tracker – Dashboard</title>
+  <link rel="stylesheet" href="dashboard.css">
+</head>
+<body>
+<header>
+  <h1>Dashboard</h1>
+  <div class="nav">
+    <button id="prev">◀</button>
+    <input type="date" id="day">
+    <button id="next">▶</button>
+    <button id="today">Aujourd'hui</button>
+  </div>
+  <div class="settings">
+    Objectif <input type="number" id="target" step="0.25" min="0" max="24"> h
+    · Plage <input type="time" id="from"> → <input type="time" id="to">
+  </div>
+  <button id="export">Export CSV</button>
+</header>
+
+<div class="cards">
+  <div class="card"><span>Total du jour</span><b id="cTotal"></b></div>
+  <div class="card"><span>Objectif</span><b id="cTarget"></b></div>
+  <div class="card" id="cMissCard"><span id="cMissLabel">Manquant</span><b id="cMiss"></b></div>
+  <div class="card"><span>Sessions</span><b id="cCount"></b></div>
+</div>
+
+<section>
+  <h2>Journée</h2>
+  <div id="timeline"></div>
+  <h3>Trous non trackés</h3>
+  <ul id="gaps"></ul>
+</section>
+
+<div class="cols">
+  <section>
+    <h2>Sessions du jour</h2>
+    <div id="entries"></div>
+  </section>
+  <section>
+    <h2>Ajouter un travail hors Jira</h2>
+    <form id="manual">
+      <input id="mTitle" placeholder="Description (ex: Réunion, support…)" required>
+      <input id="mKey" placeholder="Ticket (optionnel)">
+      <div class="two">
+        <label>Début <input type="time" id="mStart" required></label>
+        <label>Fin <input type="time" id="mEnd" required></label>
+      </div>
+      <textarea id="mNote" rows="2" placeholder="Note (optionnel)"></textarea>
+      <button class="primary">Ajouter</button>
+      <div id="mErr" class="err"></div>
+    </form>
+  </section>
+</div>
+
+<section>
+  <h2>Statistiques</h2>
+  <div class="cards" id="stats"></div>
+  <div class="cols">
+    <div><h3>Semaine (clique un jour)</h3><div id="week"></div></div>
+    <div><h3>Top tickets de la semaine</h3><div id="top"></div></div>
+  </div>
+</section>
+
+<script src="common.js"></script>
+<script src="dashboard.js"></script>
+</body>
+</html>

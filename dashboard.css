@@ -1,0 +1,45 @@
+body{margin:0;padding:20px;max-width:1100px;margin:auto;font:14px system-ui,sans-serif;color:#172b4d;background:#fafbfc}
+header{display:flex;flex-wrap:wrap;gap:16px;align-items:center;margin-bottom:16px}
+header h1{margin:0;flex:0 0 auto}
+.settings{flex:1;color:#6b778c}
+h2{font-size:15px;margin:0 0 8px}
+h3{font-size:13px;margin:12px 0 6px;color:#6b778c}
+section{background:#fff;border:1px solid #dfe1e6;border-radius:6px;padding:14px;margin-bottom:16px}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.cols>*{min-width:0}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:16px}
+section .cards{margin-bottom:12px}
+.card{background:#fff;border:1px solid #dfe1e6;border-radius:6px;padding:10px 14px}
+.card span{display:block;font-size:11px;color:#6b778c;text-transform:uppercase}
+.card b{font-size:22px}
+.card.bad b{color:#d93025}.card.good b{color:#1e8e3e}
+button{padding:6px 10px;border:1px solid #dfe1e6;border-radius:4px;background:#f4f5f7;cursor:pointer}
+button.primary{background:#0052cc;color:#fff;border-color:#0052cc}
+input,textarea{font:inherit;padding:5px;border:1px solid #dfe1e6;border-radius:4px}
+input[type=number]{width:60px}
+#timeline{position:relative;height:46px;background:#ebecf0;border-radius:4px;margin-bottom:22px}
+.blk{position:absolute;top:4px;bottom:4px;background:#0052cc;border-radius:3px;opacity:.9}
+.blk.manual{background:#8777d9}
+.blk.running{background:#d93025}
+.win{position:absolute;top:0;bottom:0;background:#fff;opacity:.55}
+.tick{position:absolute;top:100%;font-size:10px;color:#6b778c;transform:translateX(-50%)}
+ul{margin:0;padding-left:18px}
+#gaps li{color:#bf5b00}
+form{display:flex;flex-direction:column;gap:8px}
+.two{display:flex;gap:12px}
+.err{color:#d93025}
+.entry{border-top:1px solid #ebecf0;padding:6px 0}
+.entry:first-child{border-top:0}
+.entry .dur{float:right;font-weight:600}
+.entry b{color:#0052cc}
+.entry.manual b{color:#8777d9}
+.entry .t{color:#6b778c;font-size:12px}
+.entry .n{margin-left:12px;font-size:12px}
+.entry .del{border:0;background:none;color:#d93025;padding:0 4px}
+.bars{display:flex;gap:8px;align-items:flex-end;height:130px}
+.bar{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%;cursor:pointer;font-size:11px}
+.bar i{display:block;width:100%;background:#4c9aff;border-radius:3px 3px 0 0}
+.bar.sel i{background:#0052cc}
+.bar .tg{border-top:1px dashed #d93025;width:100%}
+.hbar{margin:4px 0;font-size:12px}
+.hbar div{background:#4c9aff;height:8px;border-radius:3px;margin-top:2px}
