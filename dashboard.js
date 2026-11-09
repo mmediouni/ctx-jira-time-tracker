@@ -38,6 +38,7 @@ function render() {
   $("cMissLabel").textContent = miss > 0 ? "Manquant" : "Dépassement";
   $("cMiss").textContent = fmtHM(Math.abs(miss));
   renderStatuses();
+  renderIntervals();
   renderTimeline(es);
   renderEntries(es);
   renderStats();
@@ -258,3 +259,53 @@ function renderStatuses() {
     </div>`).join("") ||
     `<small>Aucun changement de statut ce jour${me ? "" : ". Renseigne ton nom dans ⚙ Configuration pour filtrer"}. Dans le popup, clique « Synchroniser les statuts » sur un ticket.</small>`;
 }
+
+// Durée passée dans un statut : de l'entrée dans le statut jusqu'au changement suivant (par qui que ce soit).
+function statusIntervals() {
+  const tracked = (settings.statuses || ["In Test"]).map((s) => s.toLowerCase());
+  const me = (settings.me || "").toLowerCase();
+  const byKey = {};
+  statusChanges.forEach((s) => (byKey[s.key] = byKey[s.key] || []).push(s));
+  const out = [];
+  for (const [key, l] of Object.entries(byKey)) {
+    l.sort((a, b) => a.at - b.at);
+    l.forEach((c, i) => {
+      if (ymd(c.at) !== day) return;
+      if (tracked.length && !tracked.includes(c.to.toLowerCase())) return;
+      if (me && c.by.toLowerCase() !== me) return;
+      const n = l[i + 1];
+      out.push({ key, title: c.title, status: c.to, start: c.at, end: n ? n.at : null, leaveTo: n ? n.to : "" });
+    });
+  }
+  return out.sort((a, b) => a.start - b.start);
+}
+const refOf = (i) => `${i.key}|${i.start}|${i.end}`;
+
+function renderIntervals() {
+  const done = new Set(history.map((e) => e.statusRef).filter(Boolean));
+  $("intervals").innerHTML = statusIntervals().map((i) => {
+    let action;
+    if (i.end === null) action = "<small>toujours dans ce statut</small>";
+    else if (ymd(i.end) !== ymd(i.start)) action = "<small>sur plusieurs jours : ajoute-le à la main</small>";
+    else if (done.has(refOf(i))) action = "<small>✔ déjà ajouté</small>";
+    else action = `<button class="addint" data-ref="${esc(refOf(i))}">＋ Ajouter aux sessions</button>`;
+    return `<div class="entry"><span class="dur">${i.end ? fmtHM(i.end - i.start) : "…"}</span>
+      <b>${esc(i.key)}</b> ${esc(i.title || "")}
+      <div class="t">${esc(i.status)} : ${hhmm(i.start)} → ${i.end ? hhmm(i.end) + " (→ " + esc(i.leaveTo) + ")" : "en cours"}</div>
+      ${action}</div>`;
+  }).join("") || "<small>Aucune période pour les statuts suivis ce jour (voir ⚙ Configuration).</small>";
+}
+
+document.addEventListener("click", (ev) => {
+  const b = ev.target.closest(".addint");
+  if (!b) return;
+  const i = statusIntervals().find((x) => x.end !== null && refOf(x) === b.dataset.ref);
+  if (!i) return;
+  history.push({
+    id: crypto.randomUUID(), key: i.key, title: i.title || "", manual: true, statusRef: refOf(i),
+    start: i.start, end: i.end,
+    notes: [{ text: `Statut ${i.status} (→ ${i.leaveTo})`, at: i.start }],
+  });
+  history.sort((a, b) => a.start - b.start);
+  chrome.storage.local.set({ history }); render();
+});
