@@ -12,6 +12,7 @@ All data stays in your browser (`chrome.storage.local`). Nothing is sent to Jira
 - Dashboard with a day view, a timeline, daily target, missing time and untracked gaps
 - Manual sessions for non-Jira work or old tickets, on any date
 - Lunch break button (1 hour by default, you choose start and end), excluded from worked time
+- Status change sync from Jira's History tab, and time spent in a status (e.g. In Test) added to sessions in one click
 - Edit or delete any past session (times, title, ticket, notes)
 - Statistics: week, month, average per active day, longest session, top tickets
 - CSV export, plus an automatic JSON backup before clearing the history
@@ -64,6 +65,19 @@ This covers non-Jira work and old tickets you forgot to track. Known ticket keys
 
 The break appears in orange, fills the timeline so it is not reported as a gap, and is not counted as work.
 
+### Status changes and time in a status
+
+1. Set your name in **⚙ Config**, exactly as shown in Jira (for example `Mohamed Mediouni`). This keeps only your own changes. If it is empty, everyone's changes are shown.
+2. Open a ticket in Jira and click **↻ Synchroniser les statuts** in the popup. It reads the status changes from the History tab, and opens that tab for you if needed. A silent sync also runs on Start and Stop when the History tab is already open.
+3. In the dashboard, **Status changes of the day** lists each change (time, ticket, `from → to`).
+4. **Time spent in a status** shows the period from entering a tracked status to leaving it, for example `In Test: 09:29 → 11:25` (1h56). The change that ends the period can be made by anyone.
+5. Click **＋ Ajouter aux sessions** to create a session from that period. It appears in **Sessions of the day**, where you can still edit it. A period already added shows `✔ déjà ajouté`.
+
+Details:
+- Tracked statuses are set in **⚙ Config** under **Statuts à chronométrer** (comma separated, default `In Test`, empty means all statuses).
+- A period still open shows no button. A period that spans several days must be added by hand, to avoid a very long session by mistake.
+- Only the data read from the History tab is used, so a ticket that was never synced shows nothing.
+
 ### Edit or delete a session
 
 In **Sessions of the day**, click ✎ to change the ticket, title, date, start, end and notes (edit, remove or add). Click ✕ to delete a session. A running session cannot be edited until you stop it.
@@ -90,9 +104,11 @@ In **Sessions of the day**, click ✎ to change the ticket, title, date, start, 
 | `popup.html`, `popup.js`, `popup.css` | Timer popup |
 | `dashboard.html`, `dashboard.js`, `dashboard.css` | Dashboard page |
 | `common.js` | Shared helpers and CSV / JSON export |
+| `options.html`, `options.js` | Configuration page (your name, tracked statuses) |
 | `background.js` | Badge while a timer is running |
 
 ## Notes
 
+- Status changes are read from the Jira History tab using its `data-testid` attributes, so a Jira update can break the sync.
 - Jira may change its page markup. If the title is not detected, the ticket key is still read from the URL.
 - Permissions used: `storage`, `activeTab` and `scripting`.
