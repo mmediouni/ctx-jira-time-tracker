@@ -1,34 +1,56 @@
 <!doctype html>
-<html lang="fr">
+<html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>Jira Time Tracker – Configuration</title>
+  <title>Jira Time Tracker – Settings</title>
   <link rel="stylesheet" href="dashboard.css">
 </head>
 <body>
-  <h1>Configuration</h1>
+  <h1 data-i18n="o_title"></h1>
+
   <section>
-    <h2>Utilisateur</h2>
+    <h2 data-i18n="o_lang"></h2>
+    <select id="lang"></select>
+    <small data-i18n="o_langHint"></small>
+  </section>
+
+  <section>
+    <h2 data-i18n="o_user"></h2>
     <form id="f">
-      <label>Ton nom tel qu'affiché dans Jira
-        <input id="me" placeholder="ex: Mohamed Mediouni" required>
+      <label><span data-i18n="o_name"></span>
+        <input id="me" data-i18n-ph="o_namePh" required>
       </label>
-      <small>Sert à ne garder que tes changements de statut (onglet History). Copie le nom exactement comme dans Jira.</small>
-      <button class="primary">Enregistrer</button>
+      <small data-i18n="o_nameHint"></small>
+      <button class="primary" data-i18n="o_save"></button>
       <div id="msg"></div>
     </form>
   </section>
+
   <section>
-    <h2>Statuts à chronométrer</h2>
+    <h2 data-i18n="o_statuses"></h2>
     <form id="f2">
-      <label>Statuts séparés par des virgules (vide = tous)
+      <label><span data-i18n="o_statusesLabel"></span>
         <input id="statuses" placeholder="In Test">
       </label>
-      <small>Le temps passé dans ces statuts (de l'entrée à la sortie) peut être ajouté aux sessions depuis le dashboard.</small>
-      <button class="primary">Enregistrer</button>
+      <small data-i18n="o_statusesHint"></small>
+      <button class="primary" data-i18n="o_save"></button>
       <div id="msg2"></div>
     </form>
   </section>
+
+  <section>
+    <h2 data-i18n="o_meetings"></h2>
+    <small data-i18n="o_meetingsHint"></small>
+    <div id="meetings"></div>
+    <form id="f3" class="two">
+      <input id="mName" data-i18n-ph="o_meetNamePh" required>
+      <input id="mColor" type="color" value="#6554c0">
+      <button class="primary" data-i18n="d_add"></button>
+    </form>
+  </section>
+
+  <script src="common.js"></script>
+  <script src="i18n.js"></script>
   <script src="options.js"></script>
 </body>
 </html>

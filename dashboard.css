@@ -61,3 +61,9 @@ form.pausing{border-left:3px solid #ff991f;padding-left:8px}
 #gaps li.gap{cursor:pointer;text-decoration:underline dotted}
 #gaps li.gap:hover{font-weight:600}
 .me{flex-direction:row;align-items:center;gap:6px}.me input{width:130px}
+#meetBtn{background:#6554c0;border-color:#6554c0;color:#fff}#meetBtn.on{outline:2px solid #172b4d}
+#mTitle[readonly]{background:#f4f5f7}
+#autoBtn{background:#00a3bf;border-color:#00a3bf;color:#fff}#autoBtn.on{outline:2px solid #172b4d}
+.blk.autotest{background:#00a3bf}.entry.autotest b{color:#00a3bf}
+.entry.autotest{border-left:4px solid #00a3bf;padding-left:6px}
+label.chk{flex-direction:row;align-items:center;gap:6px}

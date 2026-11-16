@@ -1,40 +1,46 @@
 <!doctype html>
-<html lang="fr">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <link rel="stylesheet" href="popup.css">
 </head>
 <body>
   <section id="current">
-    <div class="label" id="curLabel">Ticket détecté</div>
+    <div class="label" id="curLabel"></div>
     <div class="key" id="key">—</div>
-    <div class="title" id="title">Aucun ticket Jira détecté sur cet onglet</div>
+    <div class="title" id="title"></div>
     <div class="timer" id="timer" hidden>00:00:00</div>
     <div class="row">
-      <button id="start" class="primary">▶ Démarrer</button>
-      <button id="stop" class="danger" hidden>■ Arrêter</button>
+      <button id="start" class="primary" data-i18n="p_start"></button>
+      <button id="stop" class="danger" data-i18n="p_stop" hidden></button>
     </div>
-    <div class="sync"><button id="sync" title="Lit les changements de statut (onglet History de Jira)">↻ Synchroniser les statuts</button> <small id="syncMsg"></small></div>
+    <div class="nojira" id="nojira">
+      <input id="freeTitle" data-i18n-ph="p_freePh">
+      <button id="startFree" data-i18n="p_startFree"></button>
+    </div>
+    <label class="autoRow" id="autoRow"><input type="checkbox" id="autoTest"> <span data-i18n="autoChk"></span></label>
+    <div class="sync"><button id="sync" data-i18n="p_sync" data-i18n-title="p_syncTip"></button> <small id="syncMsg"></small></div>
   </section>
 
   <section id="notesBox" hidden>
-    <textarea id="noteInput" rows="2" placeholder="Ajouter une note…"></textarea>
-    <button id="addNote">Ajouter la note</button>
+    <textarea id="noteInput" rows="2" data-i18n-ph="p_notePh"></textarea>
+    <button id="addNote" data-i18n="p_addNote"></button>
     <ul id="notes"></ul>
   </section>
 
   <section>
     <div class="head">
-      <h3>Historique</h3>
-      <button id="cfg" class="link">⚙ Config</button>
-      <button id="dash" class="link">📊 Dashboard</button>
-      <button id="export" class="link">Export CSV</button>
-      <button id="clear" class="link">Vider</button>
-      <button id="restore" class="link" hidden>Restaurer</button>
+      <h3 data-i18n="p_history"></h3>
+      <button id="cfg" class="link" data-i18n="p_settings"></button>
+      <button id="dash" class="link" data-i18n="p_dashboard"></button>
+      <button id="export" class="link" data-i18n="p_export"></button>
+      <button id="clear" class="link" data-i18n="p_clear"></button>
+      <button id="restore" class="link" data-i18n="p_restore" hidden></button>
     </div>
     <div id="history"></div>
   </section>
   <script src="common.js"></script>
+  <script src="i18n.js"></script>
   <script src="popup.js"></script>
 </body>
 </html>

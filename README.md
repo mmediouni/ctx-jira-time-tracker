@@ -13,6 +13,10 @@ All data stays in your browser (`chrome.storage.local`). Nothing is sent to Jira
 - Manual sessions for non-Jira work or old tickets, on any date
 - Lunch break button (1 hour by default, you choose start and end), excluded from worked time
 - Status change sync from Jira's History tab, and time spent in a status (e.g. In Test) added to sessions in one click
+- Meetings (Daily, Refinement, Retro…) from a list you configure, each with its own color
+- Counter without a Jira ticket for non-Jira work
+- Automated tests category, with or without a Jira ticket
+- Languages: English (default), French and German; the language only changes the display
 - Edit or delete any past session (times, title, ticket, notes)
 - Statistics: week, month, average per active day, longest session, top tickets
 - CSV export, plus an automatic JSON backup before clearing the history
@@ -78,6 +82,26 @@ Details:
 - A period still open shows no button. A period that spans several days must be added by hand, to avoid a very long session by mistake.
 - Only the data read from the History tab is used, so a ticket that was never synced shows nothing.
 
+### Meetings
+
+1. In **⚙ Settings**, section **Meetings**, add your meetings (for example Daily, Refinement, Retro) with a name and a color.
+2. In the dashboard form, click **📅 Meeting** and pick one from your list. The name is locked, so you always use the same names.
+3. Choose the date, start and end, then **Add**. Meetings count as work and appear in their own color on the timeline and in the session list.
+
+Renaming, recoloring or deleting a meeting in the settings does not change sessions already saved: they keep their name and color.
+
+### Without a Jira ticket
+
+In the popup, type what you work on in **Non-Jira** and click **▶ No ticket**. It works like a normal timer (notes, stop, history) and is exported with the ticket `HORS-JIRA`.
+
+### Automated tests
+
+Tick **🧪 Automated tests** in the popup before you start a timer (with a Jira ticket or without), or click **🧪 Auto test** in the dashboard form. The ticket is optional. These sessions are shown in teal, counted as work and summed in the stats. You can also change the flag on an existing session with ✎.
+
+### Language
+
+In **⚙ Settings**, section **Language**, choose English, Français or Deutsch. Only the display changes. Your sessions, CSV exports and backups are not affected. The word to type to confirm **Clear** follows the language (`CLEAR`, `VIDER`, `LEEREN`).
+
 ### Edit or delete a session
 
 In **Sessions of the day**, click ✎ to change the ticket, title, date, start, end and notes (edit, remove or add). Click ✕ to delete a session. A running session cannot be edited until you stop it.
@@ -90,11 +114,12 @@ In **Sessions of the day**, click ✎ to change the ticket, title, date, start, 
 
 ## CSV columns
 
-`ticket, titre, date, debut, debut_heure, fin, fin_heure, duree, notes`
+`ticket, titre, date, debut, debut_heure, fin, fin_heure, duree, notes, categorie`
 
 - `debut` and `fin` are ISO timestamps, `debut_heure` and `fin_heure` are local `HH:mm`.
 - Each note is written as `[YYYY-MM-DD HH:mm] text`, separated by ` | `.
-- Non-Jira sessions without a ticket use `HORS-JIRA`, lunch breaks use `PAUSE`.
+- Non-Jira sessions without a ticket use `HORS-JIRA`, lunch breaks use `PAUSE`, meetings use `REUNION`.
+- `categorie` is one of `jira`, `hors-jira`, `reunion`, `test-auto`, `pause`. The CSV format does not depend on the language.
 
 ## Project structure
 
@@ -104,7 +129,8 @@ In **Sessions of the day**, click ✎ to change the ticket, title, date, start, 
 | `popup.html`, `popup.js`, `popup.css` | Timer popup |
 | `dashboard.html`, `dashboard.js`, `dashboard.css` | Dashboard page |
 | `common.js` | Shared helpers and CSV / JSON export |
-| `options.html`, `options.js` | Configuration page (your name, tracked statuses) |
+| `options.html`, `options.js` | Settings page (language, your name, tracked statuses, meetings) |
+| `i18n.js` | Translations (English, French, German) |
 | `background.js` | Badge while a timer is running |
 
 ## Notes

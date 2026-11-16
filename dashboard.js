@@ -7,6 +7,12 @@ const at = (d, hm) => new Date(`${d}T${hm}`).getTime();
 const addDays = (d, n) => { const x = new Date(d + "T12:00:00"); x.setDate(x.getDate() + n); return ymd(x); };
 const mondayOf = (d) => { const x = new Date(d + "T12:00:00"); return addDays(d, -((x.getDay() + 6) % 7)); };
 const dur = (e) => e.end - e.start;
+// couleur d'une réunion : config actuelle, sinon couleur mémorisée dans la session
+const mcol = (e) => {
+  if (!e.meeting) return "";
+  const m = (settings.meetings || []).find((x) => x.name === e.meeting);
+  return (m && m.color) || e.color || "#6b778c";
+};
 const work = (a) => a.filter((e) => !e.pause);          // la pause ne compte pas comme du travail
 const sum = (a) => work(a).reduce((t, e) => t + dur(e), 0);
 
@@ -19,6 +25,7 @@ async function load() {
   statusChanges = d.statusChanges || [];
   history = d.history || []; running = d.running || null;
   settings = { ...settings, ...(d.settings || {}) };
+  setLang(settings.lang);
   // identifiant stable pour pouvoir éditer / supprimer
   if (history.some((e) => !e.id)) {
     history.forEach((e) => { if (!e.id) e.id = crypto.randomUUID(); });
@@ -35,7 +42,7 @@ function render() {
   $("cTarget").textContent = fmtHM(target);
   $("cCount").textContent = work(es).length;
   $("cMissCard").className = "card " + (miss > 0 ? "bad" : "good");
-  $("cMissLabel").textContent = miss > 0 ? "Manquant" : "Dépassement";
+  $("cMissLabel").textContent = miss > 0 ? t("d_missing") : t("d_over");
   $("cMiss").textContent = fmtHM(Math.abs(miss));
   renderStatuses();
   renderIntervals();
@@ -51,9 +58,9 @@ function renderTimeline(es) {
   let h = "";
   if (lo < ws) h += `<div class="win" style="left:0;width:${pct(ws)}%"></div>`;
   if (hi > we) h += `<div class="win" style="left:${pct(we)}%;right:0"></div>`;
-  h += es.map((e) => `<div class="blk ${e.running ? "running" : e.pause ? "pause" : e.manual ? "manual" : ""}"
-    style="left:${pct(e.start)}%;width:${Math.max(0.4, pct(e.end) - pct(e.start))}%"
-    title="${esc(e.key || "Hors Jira")} ${hhmm(e.start)}–${hhmm(e.end)}"></div>`).join("");
+  h += es.map((e) => `<div class="blk ${e.running ? "running" : e.pause ? "pause" : e.autotest ? "autotest" : e.manual ? "manual" : ""}"
+    style="left:${pct(e.start)}%;width:${Math.max(0.4, pct(e.end) - pct(e.start))}%${e.meeting ? ";background:" + mcol(e) : ""}"
+    title="${esc(entryLabel(e))} ${hhmm(e.start)}–${hhmm(e.end)}"></div>`).join("");
   for (let t = Math.ceil(lo / H) * H; t <= hi; t += H)
     h += `<div class="tick" style="left:${pct(t)}%">${hhmm(t)}</div>`;
   $("timeline").innerHTML = h;
@@ -69,19 +76,19 @@ function renderTimeline(es) {
   for (const [s, e] of merged) { if (s - cur >= 5 * MIN && s <= cap) gaps.push([cur, Math.min(s, cap)]); cur = Math.max(cur, e); }
   if (cap - cur >= 5 * MIN) gaps.push([cur, cap]);
   $("gaps").innerHTML = gaps.map(([s, e]) =>
-    `<li class="gap" data-s="${s}" data-e="${e}" title="Cliquer pour remplir le formulaire">${hhmm(s)} → ${hhmm(e)} (${fmtHM(e - s)}) ＋</li>`).join("") || "<li style='color:#1e8e3e'>Aucun trou 👍</li>";
+    `<li class="gap" data-s="${s}" data-e="${e}" title="${esc(t("d_gapTip"))}">${hhmm(s)} → ${hhmm(e)} (${fmtHM(e - s)}) ＋</li>`).join("") || `<li style='color:#1e8e3e'>${t("d_noGaps")}</li>`;
 }
 
 function renderEntries(es) {
   $("entries").innerHTML = es.map((e) => `
-    <div class="entry ${e.pause ? "pause" : e.manual ? "manual" : ""}">
-      ${e.running ? "" : `<button class="del" data-id="${e.id}" title="Supprimer">✕</button>
-      <button class="edit" data-id="${e.id}" title="Modifier">✎</button>`}
+    <div class="entry ${e.pause ? "pause" : e.autotest ? "autotest" : e.manual ? "manual" : ""}"${e.meeting ? ` style="border-left:4px solid ${mcol(e)};padding-left:6px"` : ""}>
+      ${e.running ? "" : `<button class="del" data-id="${e.id}" title="${esc(t("d_delete"))}">✕</button>
+      <button class="edit" data-id="${e.id}" title="${esc(t("d_edit"))}">✎</button>`}
       <span class="dur">${fmtHM(dur(e))}</span>
-      <b>${esc(e.pause ? "Pause" : e.key || "Hors Jira")}</b> ${esc(e.title)}${e.running ? " (en cours)" : ""}
+      <b${e.meeting ? ` style="color:${mcol(e)}"` : ""}>${esc(entryLabel(e))}</b> ${esc(entryTitle(e))}${e.running ? " " + t("d_running") : ""}
       <div class="t">${hhmm(e.start)} → ${e.running ? "…" : hhmm(e.end)}</div>
       ${e.notes.map((n) => `<div class="n">• [${hhmm(n.at)}] ${esc(n.text)}</div>`).join("")}
-    </div>`).join("") || "<small>Aucune session ce jour.</small>";
+    </div>`).join("") || `<small>${t("d_noSession")}</small>`;
 }
 
 function renderStats() {
@@ -92,31 +99,33 @@ function renderStats() {
   const mEs = work(all()).filter((e) => ymd(e.start).startsWith(month));
   const activeDays = new Set(mEs.map((e) => ymd(e.start))).size;
   const wEs = work(days.flatMap(ofDay));
-  const manualShare = weekTotal ? sum(wEs.filter((e) => e.manual)) / weekTotal : 0;
+  const manualShare = weekTotal ? sum(wEs.filter((e) => !e.key)) / weekTotal : 0;
   const longest = Math.max(0, ...mEs.map(dur));
   const card = (l, v) => `<div class="card"><span>${l}</span><b>${v}</b></div>`;
   $("stats").innerHTML =
-    card("Semaine", fmtHM(weekTotal)) +
-    card("Mois", fmtHM(sum(mEs))) +
-    card("Moyenne / jour actif", fmtHM(activeDays ? sum(mEs) / activeDays : 0)) +
-    card("Plus longue session", fmtHM(longest)) +
-    card("Hors Jira (semaine)", Math.round(manualShare * 100) + " %");
+    card(t("d_week"), fmtHM(weekTotal)) +
+    card(t("d_month"), fmtHM(sum(mEs))) +
+    card(t("d_avg"), fmtHM(activeDays ? sum(mEs) / activeDays : 0)) +
+    card(t("d_longest"), fmtHM(longest)) +
+    card(t("d_nonJiraWeek"), Math.round(manualShare * 100) + " %") +
+    card(t("d_meetingsWeek"), fmtHM(sum(wEs.filter((e) => e.meeting)))) +
+    card(t("d_autoWeek"), fmtHM(sum(wEs.filter((e) => e.autotest))));
 
   const max = Math.max(settings.target * H, ...per, 1);
-  const names = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
+  const names = [...Array(7)].map((_, i) => new Date(2024, 0, 1 + i).toLocaleDateString(LANG, { weekday: "short" }));  // 2024-01-01 is a Monday
   $("week").innerHTML = `<div class="bars">${days.map((d, i) => `
     <div class="bar ${d === day ? "sel" : ""}" data-d="${d}">
       <small>${per[i] ? fmtHM(per[i]) : ""}</small>
       <i style="height:${(per[i] / max) * 100}px"></i>${names[i]}
     </div>`).join("")}</div>
-    <small>Objectif : ${settings.target} h/jour</small>`;
+    <small>${t("d_targetPerDay", { n: settings.target })}</small>`;
 
   const byKey = {};
-  wEs.forEach((e) => { const k = (e.key || "Hors Jira") + " " + e.title; byKey[k] = (byKey[k] || 0) + dur(e); });
+  wEs.forEach((e) => { const k = (entryLabel(e) + " " + entryTitle(e)).trim(); byKey[k] = (byKey[k] || 0) + dur(e); });
   const top = Object.entries(byKey).sort((a, b) => b[1] - a[1]).slice(0, 8);
   $("top").innerHTML = top.map(([k, v]) => `
     <div class="hbar">${esc(k)} <b>${fmtHM(v)}</b>
-      <div style="width:${(v / top[0][1]) * 100}%"></div></div>`).join("") || "<small>Rien cette semaine.</small>";
+      <div style="width:${(v / top[0][1]) * 100}%"></div></div>`).join("") || `<small>${t("d_nothingWeek")}</small>`;
 }
 
 // --- événements ---
@@ -134,7 +143,7 @@ document.addEventListener("click", (ev) => {
   const bar = ev.target.closest(".bar");
   if (bar) { day = bar.dataset.d; render(); return; }
   const del = ev.target.closest(".del");
-  if (del && confirm("Supprimer cette session ?")) removeEntry(del.dataset.id);
+  if (del && confirm(t("d_confirmDelete"))) removeEntry(del.dataset.id);
   const gap = ev.target.closest(".gap");
   if (gap) {
     dateTouched = true; $("mDate").value = day;
@@ -157,7 +166,7 @@ $("mDate").oninput = () => (dateTouched = true);
 const syncDate = () => { if (!dateTouched) $("mDate").value = day; };
 const _render = render;
 render = function () {
-  _render(); syncDate();
+  _render(); syncDate(); fillMeetings();
   $("keys").innerHTML = [...new Set(history.map((e) => e.key).filter(Boolean))]
     .map((k) => `<option value="${esc(k)}">`).join("");
 };
@@ -165,21 +174,57 @@ render = function () {
 let pauseMode = false;
 function setPause(on) {
   pauseMode = on;
+  if (on && meetingMode) setMeeting(false);
+  if (on && autoMode) setAuto(false);
   $("pauseBtn").classList.toggle("on", on);
   $("manual").classList.toggle("pausing", on);
   if (on) {
-    $("mTitle").value = "Pause déjeuner"; $("mKey").value = "";
+    $("mTitle").value = t("lunch"); $("mKey").value = "";
     if (!$("mStart").value) $("mStart").value = "12:00";
     setPauseEnd();
     $("mStart").focus();
-  } else if ($("mTitle").value === "Pause déjeuner") $("mTitle").value = "";
+  } else if (PAUSE_TITLES.includes($("mTitle").value)) $("mTitle").value = "";
 }
 function setPauseEnd() {
   const [h, m] = $("mStart").value.split(":").map(Number);
   const t = h * 60 + m + 60;
   $("mEnd").value = `${pad(Math.floor(t / 60) % 24)}:${pad(t % 60)}`;
 }
-$("pauseBtn").onclick = () => setPause(!pauseMode);
+$("pauseBtn").onclick = () => { setMeeting(false); setPause(!pauseMode); };
+
+// --- réunions : noms et couleurs viennent de la configuration (⚙) ---
+let meetingMode = false;
+function fillMeetings() {
+  const sel = $("mMeeting"), cur = sel.value, ms = settings.meetings || [];
+  sel.innerHTML = `<option value="">${t("d_chooseMeeting")}</option>` +
+    ms.map((m) => `<option ${m.name === cur ? "selected" : ""}>${esc(m.name)}</option>`).join("");
+  $("meetHint").hidden = !(meetingMode && !ms.length);
+}
+function setMeeting(on) {
+  const was = meetingMode;
+  meetingMode = on;
+  $("meetBtn").classList.toggle("on", on);
+  $("mMeeting").hidden = !on;
+  $("mTitle").readOnly = on;
+  if (on) { setPause(false); if (autoMode) setAuto(false); $("mKey").value = ""; $("mTitle").value = ""; fillMeetings(); $("mMeeting").value = ""; $("mMeeting").focus(); }
+  else if (was) $("mTitle").value = "";
+  $("meetHint").hidden = !(on && !(settings.meetings || []).length);
+}
+$("meetBtn").onclick = () => setMeeting(!meetingMode);
+$("mMeeting").onchange = () => { $("mTitle").value = $("mMeeting").value; };
+
+// --- automated tests: with or without a Jira ticket (ticket field stays optional) ---
+let autoMode = false;
+function setAuto(on) {
+  autoMode = on;
+  $("autoBtn").classList.toggle("on", on);
+  if (on) {
+    setPause(false); setMeeting(false);
+    if (!$("mTitle").value) $("mTitle").value = t("autotest");
+    $("mTitle").focus();
+  } else if ($("mTitle").value === t("autotest")) $("mTitle").value = "";
+}
+$("autoBtn").onclick = () => setAuto(!autoMode);
 $("mStart").oninput = () => { if (pauseMode && $("mStart").value) setPauseEnd(); };  // fin = début + 1 h, ajustable ensuite
 
 $("mKey").onchange = () => {   // retrouve le titre d'un ticket déjà connu
@@ -192,18 +237,22 @@ $("manual").onsubmit = (ev) => {
   ev.preventDefault();
   const d = $("mDate").value || day;
   const start = at(d, $("mStart").value), end = at(d, $("mEnd").value);
-  if (!(end > start)) { $("mErr").textContent = "La fin doit être après le début."; return; }
+  if (!(end > start)) { $("mErr").textContent = t("d_errEnd"); return; }
   $("mErr").textContent = "";
   const note = $("mNote").value.trim();
+  const meet = meetingMode && (settings.meetings || []).find((m) => m.name === $("mMeeting").value);
+  if (meetingMode && !meet) { $("mErr").textContent = t("d_errMeeting"); return; }
   history.push({
     id: crypto.randomUUID(),
-    key: pauseMode ? "" : $("mKey").value.trim(), title: $("mTitle").value.trim(), manual: true, pause: pauseMode, start, end,
+    key: pauseMode || meet ? "" : $("mKey").value.trim(), title: $("mTitle").value.trim(), manual: true, pause: pauseMode, start, end,
+    ...(meet ? { meeting: meet.name, color: meet.color } : {}),
+    ...(autoMode ? { autotest: true } : {}),
     notes: note ? [{ text: note, at: start }] : [],
   });
   history.sort((a, b) => a.start - b.start);
   chrome.storage.local.set({ history });
   day = d; dateTouched = false;
-  $("manual").reset(); setPause(false); render();
+  $("manual").reset(); setPause(false); setMeeting(false); setAuto(false); render();
 };
 
 // --- édition d'une session existante ---
@@ -218,6 +267,15 @@ function noteRow(n, d) {
 function openEditor(e) {
   editing = e;
   $("eKey").value = e.key || ""; $("eTitle").value = e.title || "";
+  $("eMeetingRow").hidden = !e.meeting;
+  $("eAutoRow").hidden = !!(e.meeting || e.pause);
+  $("eAuto").checked = !!e.autotest;
+  $("eKey").hidden = $("eTitle").hidden = !!e.meeting;
+  if (e.meeting) {
+    const names = (settings.meetings || []).map((m) => m.name);
+    if (!names.includes(e.meeting)) names.push(e.meeting);   // réunion supprimée de la config : on la garde
+    $("eMeeting").innerHTML = names.map((n) => `<option ${n === e.meeting ? "selected" : ""}>${esc(n)}</option>`).join("");
+  }
   $("eDate").value = ymd(e.start); $("eStart").value = hhmm(e.start); $("eEnd").value = hhmm(e.end);
   $("eNotes").innerHTML = ""; e.notes.forEach((n) => $("eNotes").append(noteRow(n)));
   $("eErr").textContent = "";
@@ -225,16 +283,23 @@ function openEditor(e) {
 }
 $("eAddNote").onclick = () => $("eNotes").append(noteRow({ at: Date.now(), text: "" }));
 $("eCancel").onclick = () => $("editor").close();
-$("eDelete").onclick = () => { if (confirm("Supprimer cette session ?")) { $("editor").close(); removeEntry(editing.id); } };
+$("eDelete").onclick = () => { if (confirm(t("d_confirmDelete"))) { $("editor").close(); removeEntry(editing.id); } };
 $("eForm").onsubmit = (ev) => {
   ev.preventDefault();
   const d = $("eDate").value;
   const start = at(d, $("eStart").value);
   let end = at(d, $("eEnd").value);
   if (end <= start) end += 24 * H;            // session passée après minuit
-  if (end - start > 16 * H) { $("eErr").textContent = "Durée incohérente (fin avant début ?)."; return; }
-  editing.key = $("eKey").value.trim().toUpperCase();
-  editing.title = $("eTitle").value.trim();
+  if (end - start > 16 * H) { $("eErr").textContent = t("d_errDuration"); return; }
+  if (editing.meeting) {
+    const m = (settings.meetings || []).find((x) => x.name === $("eMeeting").value);
+    editing.meeting = $("eMeeting").value; editing.title = editing.meeting;
+    if (m) editing.color = m.color;
+  } else {
+    editing.key = $("eKey").value.trim().toUpperCase();
+    editing.title = $("eTitle").value.trim();
+    if (!editing.pause) { if ($("eAuto").checked) editing.autotest = true; else delete editing.autotest; }
+  }
   editing.start = start; editing.end = end;
   editing.notes = [...$("eNotes").children].map((r) => {
     const [t, x] = r.querySelectorAll("input");
@@ -257,7 +322,7 @@ function renderStatuses() {
       <b>${esc(s.key)}</b> ${esc(s.title || "")}
       <div class="t">${esc(s.from || "?")} → <b>${esc(s.to)}</b>${me ? "" : " · " + esc(s.by)}</div>
     </div>`).join("") ||
-    `<small>Aucun changement de statut ce jour${me ? "" : ". Renseigne ton nom dans ⚙ Configuration pour filtrer"}. Dans le popup, clique « Synchroniser les statuts » sur un ticket.</small>`;
+    `<small>${t("d_noStatus", { hint: me ? "" : t("d_noStatusHint") })}</small>`;
 }
 
 // Durée passée dans un statut : de l'entrée dans le statut jusqu'au changement suivant (par qui que ce soit).
@@ -285,15 +350,15 @@ function renderIntervals() {
   const done = new Set(history.map((e) => e.statusRef).filter(Boolean));
   $("intervals").innerHTML = statusIntervals().map((i) => {
     let action;
-    if (i.end === null) action = "<small>toujours dans ce statut</small>";
-    else if (ymd(i.end) !== ymd(i.start)) action = "<small>sur plusieurs jours : ajoute-le à la main</small>";
-    else if (done.has(refOf(i))) action = "<small>✔ déjà ajouté</small>";
-    else action = `<button class="addint" data-ref="${esc(refOf(i))}">＋ Ajouter aux sessions</button>`;
+    if (i.end === null) action = `<small>${t("d_stillIn")}</small>`;
+    else if (ymd(i.end) !== ymd(i.start)) action = `<small>${t("d_multiDay")}</small>`;
+    else if (done.has(refOf(i))) action = `<small>${t("d_added")}</small>`;
+    else action = `<button class="addint" data-ref="${esc(refOf(i))}">${t("d_addToSessions")}</button>`;
     return `<div class="entry"><span class="dur">${i.end ? fmtHM(i.end - i.start) : "…"}</span>
       <b>${esc(i.key)}</b> ${esc(i.title || "")}
-      <div class="t">${esc(i.status)} : ${hhmm(i.start)} → ${i.end ? hhmm(i.end) + " (→ " + esc(i.leaveTo) + ")" : "en cours"}</div>
+      <div class="t">${esc(i.status)} : ${hhmm(i.start)} → ${i.end ? hhmm(i.end) + " (→ " + esc(i.leaveTo) + ")" : t("d_ongoing")}</div>
       ${action}</div>`;
-  }).join("") || "<small>Aucune période pour les statuts suivis ce jour (voir ⚙ Configuration).</small>";
+  }).join("") || `<small>${t("d_noInterval")}</small>`;
 }
 
 document.addEventListener("click", (ev) => {
@@ -304,7 +369,7 @@ document.addEventListener("click", (ev) => {
   history.push({
     id: crypto.randomUUID(), key: i.key, title: i.title || "", manual: true, statusRef: refOf(i),
     start: i.start, end: i.end,
-    notes: [{ text: `Statut ${i.status} (→ ${i.leaveTo})`, at: i.start }],
+    notes: [{ text: t("d_statusNote", { s: i.status, to: i.leaveTo }), at: i.start }],
   });
   history.sort((a, b) => a.start - b.start);
   chrome.storage.local.set({ history }); render();

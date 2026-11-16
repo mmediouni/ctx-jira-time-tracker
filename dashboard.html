@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="fr">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <title>Jira Time Tracker – Dashboard</title>
@@ -12,97 +12,104 @@
     <button id="prev">◀</button>
     <input type="date" id="day">
     <button id="next">▶</button>
-    <button id="today">Aujourd'hui</button>
+    <button id="today" data-i18n="d_today"></button>
   </div>
   <div class="settings">
-    Objectif <input type="number" id="target" step="0.25" min="0" max="24"> h
-    · Plage <input type="time" id="from"> → <input type="time" id="to">
+    <span data-i18n="d_target"></span> <input type="number" id="target" step="0.25" min="0" max="24"> h
+    · <span data-i18n="d_range"></span> <input type="time" id="from"> → <input type="time" id="to">
   </div>
-  <button id="config">⚙ Configuration</button>
+  <button id="config" data-i18n="d_settings"></button>
   <button id="export">Export CSV</button>
 </header>
 
 <div class="cards">
-  <div class="card"><span>Total du jour</span><b id="cTotal"></b></div>
-  <div class="card"><span>Objectif</span><b id="cTarget"></b></div>
-  <div class="card" id="cMissCard"><span id="cMissLabel">Manquant</span><b id="cMiss"></b></div>
-  <div class="card"><span>Sessions</span><b id="cCount"></b></div>
+  <div class="card"><span data-i18n="d_totalDay"></span><b id="cTotal"></b></div>
+  <div class="card"><span data-i18n="d_target"></span><b id="cTarget"></b></div>
+  <div class="card" id="cMissCard"><span id="cMissLabel"></span><b id="cMiss"></b></div>
+  <div class="card"><span data-i18n="d_sessions"></span><b id="cCount"></b></div>
 </div>
 
 <section>
-  <h2>Journée</h2>
+  <h2 data-i18n="d_day"></h2>
   <div id="timeline"></div>
-  <h3>Trous non trackés</h3>
+  <h3 data-i18n="d_gaps"></h3>
   <ul id="gaps"></ul>
 </section>
 
 <section>
-  <h2>Changements de statut du jour</h2>
-  <h3>Temps passé dans un statut</h3>
+  <h2 data-i18n="d_statusSec"></h2>
+  <h3 data-i18n="d_timeInStatus"></h3>
   <div id="intervals"></div>
-  <h3>Tous les changements</h3>
+  <h3 data-i18n="d_allChanges"></h3>
   <div id="statuses"></div>
 </section>
 
 <div class="cols">
   <section>
-    <h2>Sessions du jour</h2>
+    <h2 data-i18n="d_sessOfDay"></h2>
     <div id="entries"></div>
   </section>
   <section>
-    <h2>Ajouter une session manuellement</h2>
-    <small>Hors Jira, ou ancien ticket oublié (choisis la date).</small>
+    <h2 data-i18n="d_addManual"></h2>
+    <small data-i18n="d_addManualHint"></small>
     <form id="manual">
-      <input id="mTitle" placeholder="Description (ex: Réunion, support…)" required>
-      <input id="mKey" list="keys" placeholder="Ticket (ex: RHCP-21, optionnel)">
+      <input id="mTitle" data-i18n-ph="d_descPh" required>
+      <input id="mKey" list="keys" data-i18n-ph="d_ticketPh">
       <datalist id="keys"></datalist>
-      <label>Date <input type="date" id="mDate" required></label>
+      <label><span data-i18n="d_date"></span> <input type="date" id="mDate" required></label>
       <div class="two">
-        <label>Début <input type="time" id="mStart" required></label>
-        <label>Fin <input type="time" id="mEnd" required></label>
+        <label><span data-i18n="d_start"></span> <input type="time" id="mStart" required></label>
+        <label><span data-i18n="d_end"></span> <input type="time" id="mEnd" required></label>
       </div>
-      <textarea id="mNote" rows="2" placeholder="Note (optionnel)"></textarea>
+      <textarea id="mNote" rows="2" data-i18n-ph="d_notePh"></textarea>
       <div class="two">
-        <button class="primary">Ajouter</button>
-        <button type="button" id="pauseBtn">🍽 Pause déj (1 h)</button>
+        <button class="primary" data-i18n="d_add"></button>
+        <button type="button" id="pauseBtn" data-i18n="d_pauseBtn"></button>
+        <button type="button" id="meetBtn" data-i18n="d_meetBtn"></button>
+        <button type="button" id="autoBtn" data-i18n="d_autoBtn"></button>
       </div>
+      <select id="mMeeting" hidden></select>
+      <small id="meetHint" data-i18n="d_noMeetingHint" hidden></small>
       <div id="mErr" class="err"></div>
     </form>
   </section>
 </div>
 
 <section>
-  <h2>Statistiques</h2>
+  <h2 data-i18n="d_stats"></h2>
   <div class="cards" id="stats"></div>
   <div class="cols">
-    <div><h3>Semaine (clique un jour)</h3><div id="week"></div></div>
-    <div><h3>Top tickets de la semaine</h3><div id="top"></div></div>
+    <div><h3 data-i18n="d_weekClick"></h3><div id="week"></div></div>
+    <div><h3 data-i18n="d_topWeek"></h3><div id="top"></div></div>
   </div>
 </section>
 
 <dialog id="editor">
   <form id="eForm">
-    <h2>Modifier la session</h2>
-    <input id="eKey" placeholder="Ticket (optionnel)">
-    <input id="eTitle" placeholder="Titre" required>
-    <label>Date <input type="date" id="eDate" required></label>
+    <h2 data-i18n="d_editSession"></h2>
+    <input id="eKey" data-i18n-ph="d_ticketOptPh">
+    <input id="eTitle" data-i18n-ph="d_titlePh" required>
+    <label id="eMeetingRow" hidden><span data-i18n="d_meeting"></span> <select id="eMeeting"></select></label>
+    <label id="eAutoRow" class="chk"><input type="checkbox" id="eAuto"> <span data-i18n="autoChk"></span></label>
+    <label><span data-i18n="d_date"></span> <input type="date" id="eDate" required></label>
     <div class="two">
-      <label>Début <input type="time" id="eStart" required></label>
-      <label>Fin <input type="time" id="eEnd" required></label>
+      <label><span data-i18n="d_start"></span> <input type="time" id="eStart" required></label>
+      <label><span data-i18n="d_end"></span> <input type="time" id="eEnd" required></label>
     </div>
-    <h3>Notes</h3>
+    <h3 data-i18n="d_notes"></h3>
     <div id="eNotes"></div>
-    <button type="button" id="eAddNote">+ Note</button>
+    <button type="button" id="eAddNote" data-i18n="d_addNoteBtn"></button>
     <div id="eErr" class="err"></div>
     <div class="two">
-      <button class="primary">Enregistrer</button>
-      <button type="button" id="eCancel">Annuler</button>
-      <button type="button" id="eDelete" class="dangerlink">Supprimer</button>
+      <button class="primary" data-i18n="d_save"></button>
+      <button type="button" id="eCancel" data-i18n="d_cancel"></button>
+      <button type="button" id="eDelete" class="dangerlink" data-i18n="d_delete"></button>
     </div>
   </form>
 </dialog>
 
 <script src="common.js"></script>
+<script src="i18n.js"></script>
 <script src="dashboard.js"></script>
 </body>
 </html>
